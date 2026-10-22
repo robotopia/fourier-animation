@@ -36,6 +36,9 @@ def main():
     parser.add_argument('out_png', help="The name of the output file")
     parser.add_argument('--vmin-vmax', nargs=2, type=float, help="The vmin and vmax to use for the wave panel")
     parser.add_argument('--invert-mask', action='store_true', help="Will use the inverse mask on the Fourier plane to generate the output image")
+    parser.add_argument('--nframes', type=int, default=5000, help="Total number of frames")
+    parser.add_argument('--npoints', type=int, default=10000, help="Total number of frequency samples to include")
+    parser.add_argument('--accel-param', type=float, default=0.0013, help="Mysterious number that controls how the animation accelerates through the points. Bigger number = slower at the beginning and faster at the end.")
 
     args = parser.parse_args()
     vmin, vmax = args.vmin_vmax if args.vmin_vmax is not None else [None, None]
@@ -54,7 +57,8 @@ def main():
     single_component_ffted = np.zeros_like(img_ffted, dtype=img_ffted.dtype)
     mask = np.full_like(accum_ffted, False, dtype=bool)
 
-    N = np.floor(np.sqrt(args.frame)*5) # This sets the rate at which fourier components get added
+    A = 2*args.npoints/np.sqrt(args.nframes)
+    N = A*np.sqrt(args.frame)/(1 + np.exp(-args.accel_param*(args.frame - args.nframes)))
 
     for value, x, y in ulam_double_spiral(N):
         mask[x, y] = True
@@ -86,8 +90,8 @@ def main():
     axs[1,1].imshow(accum, cmap='grey')
 
     # Zoom out as we go along
-    xrad = np.sqrt(N) + 2
-    yrad = xrad * img.shape[1] / img.shape[0]
+    xrad = 0.5*np.sqrt(N) + 20
+    yrad = xrad * img.shape[0] / img.shape[1]
 
     axs[0,1].set_xlim([-xrad, xrad])
     axs[0,1].set_ylim([-yrad, yrad])
