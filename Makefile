@@ -5,7 +5,7 @@ PNGS = $(patsubst %,frames/frame_%.png,$(FRAMES))
 
 .SECONDARY:
 
-anim.mpg: $(PNGS)
+anim.mp4: $(PNGS)
 	echo $(NFRAMES)
 	ffmpeg -framerate 25 -i frames/frame_%04d.png -c:v libx264 -crf 15 -preset slow -pix_fmt yuv444p $@
 
